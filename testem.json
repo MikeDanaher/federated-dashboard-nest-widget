@@ -1,0 +1,20 @@
+{
+  "framework": "jasmine2",
+  "before_tests": "grunt",
+  "src_files": [
+    "bower_components/underscore/underscore.js",
+    "lib/namespace.js",
+    "lib/sinon.js",
+    "bower_components/jquery/dist/jquery.js",
+    "bower_components/jasmine-jquery/lib/jasmine-jquery.js",
+    ".tmp/scripts/frontEnd/**/*.js",
+    ".tmp/spec/frontEnd/**/*.js"
+  ],
+  "launchers":{
+    "Node": {
+      "command": "jasmine-node --coffee spec/backend_module/"
+    }
+  },
+  "launch_in_ci": ["PhantomJS"],
+  "launch_in_dev": [ "Chrome"]
+}

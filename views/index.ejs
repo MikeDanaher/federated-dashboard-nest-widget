@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+  <title><%= title %></title>
+  <script src="/bower_components/underscore/underscore.js"></script>
+  <script src="/bower_components/jquery/dist/jquery.js"></script>
+  <script src="/dist/federated-dashboard-twitter-widget.js"></script>
+  </head>
+
+  <body>
+    <div data-id="widget-display-1"></div>
+    <div data-id="widget-display-2"></div>
+    <script>
+      Twitter.Controller.setupWidgetIn('[data-id=widget-display-1]')
+      Twitter.Controller.setupWidgetIn('[data-id=widget-display-2]', "", "bikes")
+      logoHtml = Twitter.Display.generateLogo({width: 100, dataId: "twitter-logo"})
+      $('[data-id=widget-display]').prepend(logoHtml)
+    </script>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "federated-dashboard-notification-widget",
+  "version": "0.0.0",
+  "ignore": [
+    ".tmp",
+    "spec",
+    "Gruntfile.js",
+    "testem.json",
+    "./views",
+    "./server.js"
+  ],
+  "dependencies": {
+    "underscore": "~1.6.0",
+    "jquery": "~2.1.0"
+  },
+  "devDependencies": {
+    "jasmine-jquery": "2.0.3",
+    "coffee-script": "~1.7.1"
+  }
+}
