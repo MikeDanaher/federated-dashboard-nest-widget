@@ -8,64 +8,37 @@ app     = express()
 google  = require('googleapis')
 OAuth2  = google.auth.OAuth2
 gmail   = google.gmail('v1')
+url = require('url')
+FeedParser = require('feedparser')
+GoogleOauthWrapper = require('./dist/backEnd/googleOauthWrapper.min')
 
 apiKey        = process.env.GMAIL_API_KEY
 clientId      = process.env.GMAIL_CLIENT_ID
 clientSecret  = process.env.GMAIL_CLIENT_SECRET
 redirectUri   = process.env.GMAIL_REDIRECT_URIS
 
-scopes  = ["https://www.googleapis.com/auth/gmail.readonly",
-           "https://www.googleapis.com/auth/gmail.modify"]
+scopes  = [ 'https://www.googleapis.com/auth/gmail.readonly',
+            'https://www.googleapis.com/auth/gmail.modify',
+            'https://mail.google.com/mail/feed/atom' ]
 
 oauth2Client = new OAuth2(clientId, clientSecret, redirectUri)
+gmailWrapper = new GoogleOauthWrapper(oauth2Client, scopes)
 
 app.use(express.static(__dirname))
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 
 app.get '/', (request, response) ->
-  options = {
-    host: 'api.meetup.com'
-    path: '/Chicago-Agile-Open-Space/upcoming.ical'
-  }
-  bodyChunks = []
-  req = http.get(options, (res) ->
-    res.on('data', (chunk) ->
-      bodyChunks.push(chunk)
-    ).on('end', ->
-      body = Buffer.concat(bodyChunks)
-      console.log body
-      response.json {body: body.toString()}
-    )
-  )
-  req.on('error', (error) ->
-    console.log error
-  )
-  #response.render 'index', {title: "gmail-widget"}
-
-app.get '/emails', (request, response) ->
-  getAccessToken(oauth2Client, response)
+  url = gmailWrapper.generateAuthUrl()
+  response.redirect(url)
 
 app.get '/google_response', (request, response) ->
-  code = request.query.code
-  oauth2Client.getToken(code, (err, tokens) ->
-    oauth2Client.setCredentials(tokens)
-    if err
-      console.log err
-    else
-      console.log 'got token:'
-      console.log tokens
-      getEmails(response)
-  )
+  gmailWrapper.getUserToken(request)
+  response.redirect('/dashboard')
 
+app.get '/dashboard', (request, response) ->
+  response.render 'index', {title: 'notification widget'}
 
-getAccessToken = (oauth2Client, response) ->
-  url = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: scopes
-  })
-
-  response.redirect(url)
 
 getEmails = (res) ->
   console.log "getting emails"
@@ -87,6 +60,23 @@ returnFirstEmail = (emails, res) ->
     console.log err
     console.log response
     res.json response
+  )
+
+processRequest = (url, response) ->
+  data = []
+  feedRequest = request(url)
+  feedParser = new FeedParser()
+  feedRequest.on('response', (resp) ->
+    this.pipe(feedParser)
+  )
+
+  feedParser.on('readable', ->
+    data.push(item) while item = this.read()
+  )
+
+  feedParser.on('end', ->
+    console.log data[2]
+    response.send(data)
   )
 
 server = app.listen 5000, ->

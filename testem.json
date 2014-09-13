@@ -12,9 +12,9 @@
   ],
   "launchers":{
     "Node": {
-      "command": "jasmine-node --coffee spec/backend_module/"
+      "command": "mocha --compilers coffee:coffee-script/register --reporter spec spec/backend"
     }
   },
   "launch_in_ci": ["PhantomJS"],
-  "launch_in_dev": [ "Chrome"]
+  "launch_in_dev": [ "Chrome", "Node"]
 }

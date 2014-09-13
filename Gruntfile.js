@@ -38,7 +38,8 @@ module.exports = function (grunt) {
     uglify: {
       dist: {
         files: {
-          'dist/<%= pkg.name %>.min.js': ['<%= concat.dist.dest %>']
+          'dist/<%= pkg.name %>.min.js': ['<%= concat.dist.dest %>'],
+          'dist/backEnd/googleOauthWrapper.min.js': '.tmp/scripts/backEnd/googleOauthWrapper.js'
         }
       }
     }

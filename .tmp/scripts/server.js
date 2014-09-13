@@ -1,5 +1,5 @@
 (function() {
-  var OAuth2, apiKey, app, clientId, clientSecret, express, fs, getAccessToken, getEmails, gmail, google, http, io, oauth2Client, path, redirectUri, returnFirstEmail, scopes, server, util;
+  var FeedParser, GoogleOauthWrapper, OAuth2, apiKey, app, clientId, clientSecret, express, fs, getEmails, gmail, gmailWrapper, google, http, io, oauth2Client, path, processRequest, redirectUri, returnFirstEmail, scopes, server, url, util;
 
   express = require('express');
 
@@ -21,6 +21,12 @@
 
   gmail = google.gmail('v1');
 
+  url = require('url');
+
+  FeedParser = require('feedparser');
+
+  GoogleOauthWrapper = require('./dist/backEnd/googleOauthWrapper.min');
+
   apiKey = process.env.GMAIL_API_KEY;
 
   clientId = process.env.GMAIL_CLIENT_ID;
@@ -29,9 +35,11 @@
 
   redirectUri = process.env.GMAIL_REDIRECT_URIS;
 
-  scopes = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.modify"];
+  scopes = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.modify', 'https://mail.google.com/mail/feed/atom'];
 
   oauth2Client = new OAuth2(clientId, clientSecret, redirectUri);
+
+  gmailWrapper = new GoogleOauthWrapper(oauth2Client, scopes);
 
   app.use(express["static"](__dirname));
 
@@ -40,56 +48,20 @@
   app.set('view engine', 'ejs');
 
   app.get('/', function(request, response) {
-    var bodyChunks, options, req;
-    options = {
-      host: 'api.meetup.com',
-      path: '/Chicago-Agile-Open-Space/upcoming.ical'
-    };
-    bodyChunks = [];
-    req = http.get(options, function(res) {
-      return res.on('data', function(chunk) {
-        return bodyChunks.push(chunk);
-      }).on('end', function() {
-        var body;
-        body = Buffer.concat(bodyChunks);
-        console.log(body);
-        return response.json({
-          body: body.toString()
-        });
-      });
-    });
-    return req.on('error', function(error) {
-      return console.log(error);
-    });
-  });
-
-  app.get('/emails', function(request, response) {
-    return getAccessToken(oauth2Client, response);
+    url = gmailWrapper.generateAuthUrl();
+    return response.redirect(url);
   });
 
   app.get('/google_response', function(request, response) {
-    var code;
-    code = request.query.code;
-    return oauth2Client.getToken(code, function(err, tokens) {
-      oauth2Client.setCredentials(tokens);
-      if (err) {
-        return console.log(err);
-      } else {
-        console.log('got token:');
-        console.log(tokens);
-        return getEmails(response);
-      }
-    });
+    gmailWrapper.getUserToken(request);
+    return response.redirect('/dashboard');
   });
 
-  getAccessToken = function(oauth2Client, response) {
-    var url;
-    url = oauth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: scopes
+  app.get('/dashboard', function(request, response) {
+    return response.render('index', {
+      title: 'notification widget'
     });
-    return response.redirect(url);
-  };
+  });
 
   getEmails = function(res) {
     console.log("getting emails");
@@ -112,6 +84,28 @@
       console.log(err);
       console.log(response);
       return res.json(response);
+    });
+  };
+
+  processRequest = function(url, response) {
+    var data, feedParser, feedRequest;
+    data = [];
+    feedRequest = request(url);
+    feedParser = new FeedParser();
+    feedRequest.on('response', function(resp) {
+      return this.pipe(feedParser);
+    });
+    feedParser.on('readable', function() {
+      var item, _results;
+      _results = [];
+      while (item = this.read()) {
+        _results.push(data.push(item));
+      }
+      return _results;
+    });
+    return feedParser.on('end', function() {
+      console.log(data[2]);
+      return response.send(data);
     });
   };
 
