@@ -1,16 +1,15 @@
 express = require('express')
-fs      = require('fs')
-path    = require('path')
-util    = require('util')
-http    = require('http')
-io      = require('socket.io')
 app     = express()
+path    = require('path')
 google  = require('googleapis')
 OAuth2  = google.auth.OAuth2
 gmail   = google.gmail('v1')
-url = require('url')
+
+io      = require('socket.io')
+
 FeedParser = require('feedparser')
 GoogleOauthWrapper = require('./dist/backEnd/googleOauthWrapper.min')
+GoogleEmailWrapper = require('./dist/backend/googleEmailWrapper.min')
 
 apiKey        = process.env.GMAIL_API_KEY
 clientId      = process.env.GMAIL_CLIENT_ID
@@ -22,61 +21,41 @@ scopes  = [ 'https://www.googleapis.com/auth/gmail.readonly',
             'https://mail.google.com/mail/feed/atom' ]
 
 oauth2Client = new OAuth2(clientId, clientSecret, redirectUri)
-gmailWrapper = new GoogleOauthWrapper(oauth2Client, scopes)
+oauthWrapper = new GoogleOauthWrapper(oauth2Client, scopes)
+emailWrapper = new GoogleEmailWrapper({
+  auth:     oauth2Client,
+  resource: gmail.users.messages
+})
 
 app.use(express.static(__dirname))
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 
 app.get '/', (request, response) ->
-  url = gmailWrapper.generateAuthUrl()
+  url = oauthWrapper.generateAuthUrl()
   response.redirect(url)
 
 app.get '/google_response', (request, response) ->
-  gmailWrapper.getUserToken(request)
+  oauthWrapper.getUserToken(request)
   response.redirect('/dashboard')
 
 app.get '/dashboard', (request, response) ->
   response.render 'index', {title: 'notification widget'}
 
+app.post '/get_emails', (request, response) ->
+  getEmails(response)
 
 getEmails = (res) ->
   console.log "getting emails"
-  gmail.users.messages.list({
-    userId: "me",
-    maxResults: 10,
-    q: "from:hlyjak@8thlight.com"
-    auth: oauth2Client
-  }, (err, response) ->
-    returnFirstEmail(response.messages, res)
+  emailWrapper.getEmailsFrom('*@gmail.com', (response) ->
+    returnFirstEmail(response, res)
   )
 
 returnFirstEmail = (emails, res) ->
-  gmail.users.messages.get({
-    userId: "me",
-    id: emails[0].id,
-    auth: oauth2Client
-  }, (err, response) ->
-    console.log err
+  console.log emails[0].id
+  emailWrapper.getFormatedEmailById(emails[0].id, (response) ->
     console.log response
     res.json response
-  )
-
-processRequest = (url, response) ->
-  data = []
-  feedRequest = request(url)
-  feedParser = new FeedParser()
-  feedRequest.on('response', (resp) ->
-    this.pipe(feedParser)
-  )
-
-  feedParser.on('readable', ->
-    data.push(item) while item = this.read()
-  )
-
-  feedParser.on('end', ->
-    console.log data[2]
-    response.send(data)
   )
 
 server = app.listen 5000, ->

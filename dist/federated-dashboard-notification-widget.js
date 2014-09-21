@@ -26,7 +26,24 @@
     Controller.setupWidgetIn = function(settings) {
       var templateHtml;
       templateHtml = Notification.Templates.renderForm();
-      return $(settings.container).html(templateHtml);
+      $(settings.container).html(templateHtml);
+      return this.bind();
+    };
+
+    Controller.bind = function() {
+      return $('[data-id=notification-button]').click((function(_this) {
+        return function(event) {
+          console.log('clicked');
+          event.preventDefault();
+          return _this.getEmails();
+        };
+      })(this));
+    };
+
+    Controller.getEmails = function() {
+      return $.post('/get_emails', {}, function(response) {
+        return console.log(response);
+      });
     };
 
     Controller.exitEditMode = function() {

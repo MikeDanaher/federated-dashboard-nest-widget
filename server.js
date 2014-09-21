@@ -1,19 +1,11 @@
 (function() {
-  var FeedParser, GoogleOauthWrapper, OAuth2, apiKey, app, clientId, clientSecret, express, fs, getEmails, gmail, gmailWrapper, google, http, io, oauth2Client, path, processRequest, redirectUri, returnFirstEmail, scopes, server, url, util;
+  var FeedParser, GoogleEmailWrapper, GoogleOauthWrapper, OAuth2, apiKey, app, clientId, clientSecret, emailWrapper, express, getEmails, gmail, google, io, oauth2Client, oauthWrapper, path, redirectUri, returnFirstEmail, scopes, server;
 
   express = require('express');
 
-  fs = require('fs');
+  app = express();
 
   path = require('path');
-
-  util = require('util');
-
-  http = require('http');
-
-  io = require('socket.io');
-
-  app = express();
 
   google = require('googleapis');
 
@@ -21,11 +13,13 @@
 
   gmail = google.gmail('v1');
 
-  url = require('url');
+  io = require('socket.io');
 
   FeedParser = require('feedparser');
 
   GoogleOauthWrapper = require('./dist/backEnd/googleOauthWrapper.min');
+
+  GoogleEmailWrapper = require('./dist/backend/googleEmailWrapper.min');
 
   apiKey = process.env.GMAIL_API_KEY;
 
@@ -39,7 +33,12 @@
 
   oauth2Client = new OAuth2(clientId, clientSecret, redirectUri);
 
-  gmailWrapper = new GoogleOauthWrapper(oauth2Client, scopes);
+  oauthWrapper = new GoogleOauthWrapper(oauth2Client, scopes);
+
+  emailWrapper = new GoogleEmailWrapper({
+    auth: oauth2Client,
+    resource: gmail.users.messages
+  });
 
   app.use(express["static"](__dirname));
 
@@ -48,12 +47,13 @@
   app.set('view engine', 'ejs');
 
   app.get('/', function(request, response) {
-    url = gmailWrapper.generateAuthUrl();
+    var url;
+    url = oauthWrapper.generateAuthUrl();
     return response.redirect(url);
   });
 
   app.get('/google_response', function(request, response) {
-    gmailWrapper.getUserToken(request);
+    oauthWrapper.getUserToken(request);
     return response.redirect('/dashboard');
   });
 
@@ -63,49 +63,22 @@
     });
   });
 
+  app.post('/get_emails', function(request, response) {
+    return getEmails(response);
+  });
+
   getEmails = function(res) {
     console.log("getting emails");
-    return gmail.users.messages.list({
-      userId: "me",
-      maxResults: 10,
-      q: "from:hlyjak@8thlight.com",
-      auth: oauth2Client
-    }, function(err, response) {
-      return returnFirstEmail(response.messages, res);
+    return emailWrapper.getEmailsFrom('*@gmail.com', function(response) {
+      return returnFirstEmail(response, res);
     });
   };
 
   returnFirstEmail = function(emails, res) {
-    return gmail.users.messages.get({
-      userId: "me",
-      id: emails[0].id,
-      auth: oauth2Client
-    }, function(err, response) {
-      console.log(err);
+    console.log(emails[0].id);
+    return emailWrapper.getFormatedEmailById(emails[0].id, function(response) {
       console.log(response);
       return res.json(response);
-    });
-  };
-
-  processRequest = function(url, response) {
-    var data, feedParser, feedRequest;
-    data = [];
-    feedRequest = request(url);
-    feedParser = new FeedParser();
-    feedRequest.on('response', function(resp) {
-      return this.pipe(feedParser);
-    });
-    feedParser.on('readable', function() {
-      var item, _results;
-      _results = [];
-      while (item = this.read()) {
-        _results.push(data.push(item));
-      }
-      return _results;
-    });
-    return feedParser.on('end', function() {
-      console.log(data[2]);
-      return response.send(data);
     });
   };
 
