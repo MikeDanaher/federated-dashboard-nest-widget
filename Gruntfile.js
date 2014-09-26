@@ -39,8 +39,9 @@ module.exports = function (grunt) {
       dist: {
         files: {
           'dist/<%= pkg.name %>.min.js': ['<%= concat.dist.dest %>'],
-          'dist/backEnd/googleOauthWrapper.min.js': '.tmp/scripts/backEnd/googleOauthWrapper.js',
-          'dist/backEnd/googleEmailWrapper.min.js': '.tmp/scripts/backEnd/googleEmailWrapper.js'
+          'dist/backEnd/googleOauthWrapper.js': '.tmp/scripts/backEnd/googleOauthWrapper.js',
+          'dist/backEnd/googleEmailWrapper.js': '.tmp/scripts/backEnd/googleEmailWrapper.js',
+          'dist/backEnd/router.js': '.tmp/scripts/backEnd/router.js'
         }
       }
     }

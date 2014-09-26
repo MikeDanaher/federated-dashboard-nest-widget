@@ -15,6 +15,6 @@
       "command": "mocha --compilers coffee:coffee-script/register --reporter spec spec/backend"
     }
   },
-  "launch_in_ci": ["PhantomJS"],
-  "launch_in_dev": [ "Chrome", "Node"]
+  "launch_in_ci": [ "PhantomJS" ],
+  "launch_in_dev": [ "Chrome", "Node" ]
 }

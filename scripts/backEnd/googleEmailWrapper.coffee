@@ -40,10 +40,12 @@ class GoogleEmailWrapper
     if err
       callback(err)
     else
-      callback(@formatEmail(response.payload))
+      console.log response
+      callback(@formatEmail(response.id, response.payload))
 
-  formatEmail: (emailData) ->
+  formatEmail: (id, emailData) ->
     {
+      id: id
       from:    @emailSender(emailData.headers),
       subject: @emailSubject(emailData.headers)
       body:    @decodeEmailBody(emailData.body)
@@ -56,12 +58,14 @@ class GoogleEmailWrapper
     @getHeaderValue('Subject', headers)
 
   decodeEmailBody: (body) ->
-    base64.decode(body.data)
+    body.data && base64.decode(body.data)
 
   getHeaderValue: (headerName, headers) ->
-    match = headers.filter((header) ->
-      header.name == headerName
-    )
-    match[0].value
+    match = headers.filter((header) -> header.name == headerName )
+
+    if match[0]
+      match[0].value
+    else
+      ''
 
 module.exports = GoogleEmailWrapper

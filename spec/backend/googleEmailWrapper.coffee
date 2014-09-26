@@ -88,6 +88,7 @@ describe 'GoogleEmailWrapper', ->
 
       expect(spy.callCount).to.eql(1)
       expect(spy.getCall(0).args[0]).to.eql({
+        id:      mockEmail.id
         from:    fromHeader.value,
         subject: subjectHeader.value,
         body:    emailBody
@@ -111,3 +112,10 @@ describe 'GoogleEmailWrapper', ->
         id:     'someId',
         auth:    oauthClient
       })
+
+    describe 'getHeaderValue', ->
+      it 'returns an empty string when header is not found', ->
+        headers = [subjectHeader, otherHeader]
+        wrapper = newWrapper(successfulResource)
+
+        expect(wrapper.getHeaderValue('From', headers)).to.eql('')

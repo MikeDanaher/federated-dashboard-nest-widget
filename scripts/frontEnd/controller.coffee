@@ -1,27 +1,19 @@
 namespace('Notification')
 
 class Notification.Controller
+  @settings = {}
   @setupWidgetIn: (settings) ->
-    templateHtml = Notification.Templates.renderForm()
-    $(settings.container).html(templateHtml)
-    @bind()
-
-  @bind: ->
-    $('[data-id=notification-button]').click( (event) =>
-      console.log 'clicked'
-      event.preventDefault()
-      @getEmails()
-    )
-
-  @getEmails: ->
-    $.post('/get_emails', {}, (response) ->
-      console.log response
-    )
+    new Notification.Widgets.Controller(settings).initialize()
+    @settings = settings
 
   @exitEditMode: ->
-    $('[data-id=notification-form]').hide()
-    $('.widget-close').hide()
+    $('[data-id=notification-widget-wrapper] [data-id=notification-form]').hide(@animationSpeed())
+    $('[data-id=notification-widget-wrapper] .widget-close').hide(@animationSpeed())
 
   @enterEditMode: ->
-    $('[data-id=notification-form]').show()
-    $('.widget-close').show()
+    console.log @animationSpeed()
+    $('[data-id=notification-widget-wrapper] [data-id=notification-form]').show(@animationSpeed())
+    $('[data-id=notification-widget-wrapper] .widget-close').show(@animationSpeed())
+
+  @animationSpeed: ->
+    @settings.animationSpeed

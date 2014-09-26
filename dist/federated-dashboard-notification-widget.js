@@ -23,37 +23,26 @@
   Notification.Controller = (function() {
     function Controller() {}
 
+    Controller.settings = {};
+
     Controller.setupWidgetIn = function(settings) {
-      var templateHtml;
-      templateHtml = Notification.Templates.renderForm();
-      $(settings.container).html(templateHtml);
-      return this.bind();
-    };
-
-    Controller.bind = function() {
-      return $('[data-id=notification-button]').click((function(_this) {
-        return function(event) {
-          console.log('clicked');
-          event.preventDefault();
-          return _this.getEmails();
-        };
-      })(this));
-    };
-
-    Controller.getEmails = function() {
-      return $.post('/get_emails', {}, function(response) {
-        return console.log(response);
-      });
+      new Notification.Widgets.Controller(settings).initialize();
+      return this.settings = settings;
     };
 
     Controller.exitEditMode = function() {
-      $('[data-id=notification-form]').hide();
-      return $('.widget-close').hide();
+      $('[data-id=notification-widget-wrapper] [data-id=notification-form]').hide(this.animationSpeed());
+      return $('[data-id=notification-widget-wrapper] .widget-close').hide(this.animationSpeed());
     };
 
     Controller.enterEditMode = function() {
-      $('[data-id=notification-form]').show();
-      return $('.widget-close').show();
+      console.log(this.animationSpeed());
+      $('[data-id=notification-widget-wrapper] [data-id=notification-form]').show(this.animationSpeed());
+      return $('[data-id=notification-widget-wrapper] .widget-close').show(this.animationSpeed());
+    };
+
+    Controller.animationSpeed = function() {
+      return this.settings.animationSpeed;
     };
 
     return Controller;
@@ -79,13 +68,216 @@
 }).call(this);
 
 (function() {
-  namespace("Notification");
+  namespace('Notification.Widgets');
 
-  Notification.Templates = (function() {
+  Notification.Widgets.API = (function() {
+    function API() {}
+
+    API.getEmailsFrom = function(processor, from) {
+      return $.get("/emails?from=" + (from || '*@8thlight.com'), function(response) {
+        return processor.processEmails(response);
+      });
+    };
+
+    API.getEmail = function(id, processor) {
+      return $.get("/emails/" + id, function(response) {
+        return processor.processEmail(response);
+      });
+    };
+
+    return API;
+
+  })();
+
+}).call(this);
+
+(function() {
+  namespace('Notification.Widgets');
+
+  Notification.Widgets.Controller = (function() {
+    function Controller(args) {
+      this.container = args.container;
+      this.display = new Notification.Widgets.Display(args);
+      this.processor = new Notification.Widgets.EmailProcessor(this.display, args.maxNotifications);
+    }
+
+    Controller.prototype.initialize = function() {
+      this.display.setup();
+      return this.bind();
+    };
+
+    Controller.prototype.bind = function() {
+      return $("" + this.container + " [data-id=notification-button]").on('click', (function(_this) {
+        return function() {
+          return _this.getNotifications();
+        };
+      })(this));
+    };
+
+    Controller.prototype.getNotifications = function() {
+      var searchFrom;
+      searchFrom = this.display.getInput();
+      return this.processor.getNotifications(searchFrom);
+    };
+
+    return Controller;
+
+  })();
+
+}).call(this);
+
+(function() {
+  namespace('Notification.Widgets');
+
+  Notification.Widgets.Display = (function() {
+    function Display(args) {
+      this.container = args.container;
+    }
+
+    Display.prototype.setup = function() {
+      var templateHtml;
+      templateHtml = Notification.Widgets.Templates.renderForm();
+      return $(this.container).html(templateHtml);
+    };
+
+    Display.prototype.getInput = function() {
+      return $("" + this.container + " [name=notification-search]").val();
+    };
+
+    Display.prototype.renderEmails = function(emails) {
+      var emailsHtml;
+      emailsHtml = Notification.Widgets.Templates.renderEmails(emails);
+      return $("" + this.container + " [data-id=notification-output]").html(emailsHtml);
+    };
+
+    return Display;
+
+  })();
+
+}).call(this);
+
+(function() {
+  namespace('Notification.Widgets');
+
+  Notification.Widgets.EmailPresenter = (function() {
+    function EmailPresenter(email) {
+      this.id = email.id;
+      this.from = email.from;
+      this.body = email.body;
+      this.subject = email.subject;
+      this.symbol = this.generateSymbol(email.subject);
+    }
+
+    EmailPresenter.prototype.generateSymbol = function(subject) {
+      if (subject === '[alert]') {
+        return '<i class="red fa fa-exclamation-circle"></i>';
+      } else {
+        return '<i class="fa fa-bell"></i>';
+      }
+    };
+
+    return EmailPresenter;
+
+  })();
+
+}).call(this);
+
+(function() {
+  namespace('Notification.Widgets');
+
+  Notification.Widgets.EmailProcessor = (function() {
+    function EmailProcessor(display, maxNotifications) {
+      this.display = display;
+      this.maxNotifications = maxNotifications;
+      this.currentNotifications = [];
+      this.notificationsHistory = [];
+    }
+
+    EmailProcessor.prototype.getNotifications = function(from) {
+      return Notification.Widgets.API.getEmailsFrom(this, from);
+    };
+
+    EmailProcessor.prototype.processEmails = function(emails) {
+      return _.each(emails.reverse(), (function(_this) {
+        return function(email) {
+          if (_this.isNewEmail(email)) {
+            return _this.getNewEmail(email);
+          }
+        };
+      })(this));
+    };
+
+    EmailProcessor.prototype.isNewEmail = function(email) {
+      var isNewEmail;
+      isNewEmail = true;
+      _.each(this.notificationsHistory, function(existingEmail) {
+        if (existingEmail.id === email.id) {
+          return isNewEmail = false;
+        }
+      });
+      return isNewEmail;
+    };
+
+    EmailProcessor.prototype.getNewEmail = function(email) {
+      return Notification.Widgets.API.getEmail(email.id, this);
+    };
+
+    EmailProcessor.prototype.processEmail = function(email) {
+      this.addToHistory(email);
+      if (email.body && this.hasValidSubject(email)) {
+        return this.displayEmail(email);
+      }
+    };
+
+    EmailProcessor.prototype.hasValidSubject = function(email) {
+      return email.subject && (email.subject === '[notification]' || email.subject === '[alert]');
+    };
+
+    EmailProcessor.prototype.displayEmail = function(email) {
+      this.addToCurrentNotifications(email);
+      return this.display.renderEmails(this.recentEmails());
+    };
+
+    EmailProcessor.prototype.addToHistory = function(email) {
+      return this.addToBegining(this.notificationsHistory, email);
+    };
+
+    EmailProcessor.prototype.addToCurrentNotifications = function(email) {
+      return this.addToBegining(this.currentNotifications, this.createPresenter(email));
+    };
+
+    EmailProcessor.prototype.createPresenter = function(email) {
+      return new Notification.Widgets.EmailPresenter(email);
+    };
+
+    EmailProcessor.prototype.addToBegining = function(container, element) {
+      return container.unshift(element);
+    };
+
+    EmailProcessor.prototype.recentEmails = function() {
+      return this.currentNotifications.slice(0, this.maxNotifications);
+    };
+
+    return EmailProcessor;
+
+  })();
+
+}).call(this);
+
+(function() {
+  namespace("Notification.Widgets");
+
+  Notification.Widgets.Templates = (function() {
     function Templates() {}
 
     Templates.renderForm = function() {
       return _.template("<div class=\"widget\" data-id=\"notification-widget-wrapper\">\n  <div class=\"widget-header\">\n    <h2 class=\"widget-title\">Notifications</h2>\n    <span class='widget-close' data-id='notification-close'>×</span>\n    <div class=\"widget-form\" data-id=\"notification-form\">\n      <input name=\"notification-search\" type=\"text\" autofocus=\"true\">\n      <button data-id=\"notification-button\">Load Notifications</button><br>\n    </div>\n  </div>\n  <div class=\"widget-body\" data-id=\"notification-output\"></div>\n</div>", {});
+    };
+
+    Templates.renderEmails = function(emails) {
+      return _.template("<% emails.forEach(function(email) { %>\n  <div class=\"notification\">\n    <div class=\"notification-symbol\">\n      <%= email.symbol %>\n    </div>\n    <div class=\"notification-content\">\n      <div class=\"notification-author\">\n        <%= email.from %>\n      </div>\n      <div class=\"notification-body\">\n        <%= email.body %>\n      </div>\n    </div>\n  </div>\n<% }) %>\n", {
+        emails: emails
+      });
     };
 
     return Templates;
