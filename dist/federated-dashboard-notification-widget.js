@@ -97,27 +97,76 @@
   Notification.Widgets.Controller = (function() {
     function Controller(args) {
       this.container = args.container;
+      this.refreshRate = args.refreshRate;
       this.display = new Notification.Widgets.Display(args);
       this.processor = new Notification.Widgets.EmailProcessor(this.display, args.maxNotifications);
+      this.isActive = false;
     }
 
     Controller.prototype.initialize = function() {
       this.display.setup();
-      return this.bind();
+      this.bind();
+      return this.activate();
     };
 
     Controller.prototype.bind = function() {
-      return $("" + this.container + " [data-id=notification-button]").on('click', (function(_this) {
+      $("" + this.container + " [data-id=notification-button]").on('click', (function(_this) {
         return function() {
-          return _this.getNotifications();
+          return _this.getNotifications(_this.display.getInput());
+        };
+      })(this));
+      return $("" + this.container + " [data-id=notification-close]").on('click', (function(_this) {
+        return function() {
+          return _this.closeWidget();
         };
       })(this));
     };
 
-    Controller.prototype.getNotifications = function() {
-      var searchFrom;
-      searchFrom = this.display.getInput();
-      return this.processor.getNotifications(searchFrom);
+    Controller.prototype.unbind = function() {
+      $("" + this.container + " [data-id=notification-button]").unbind('click');
+      return $("" + this.container + " [data-id=notification-close]").unbind('click');
+    };
+
+    Controller.prototype.activate = function() {
+      return this.isActive = true;
+    };
+
+    Controller.prototype.deactivate = function() {
+      return this.isActive = false;
+    };
+
+    Controller.prototype.getNotifications = function(input) {
+      this.processor.getNotifications(input);
+      if (this.refreshRate) {
+        return this.refreshNotifications(input);
+      }
+    };
+
+    Controller.prototype.refreshNotifications = function(input) {
+      this.clearCurrentTimeout();
+      return this.timeout = setTimeout((function(_this) {
+        return function() {
+          if (_this.isActive) {
+            return _this.getNotifications(input);
+          }
+        };
+      })(this), this.refreshSeconds());
+    };
+
+    Controller.prototype.clearCurrentTimeout = function() {
+      if (this.timeout) {
+        return clearTimeout(this.timeout);
+      }
+    };
+
+    Controller.prototype.closeWidget = function() {
+      $(this.container).remove();
+      this.deactivate();
+      return this.unbind();
+    };
+
+    Controller.prototype.refreshSeconds = function() {
+      return this.refreshRate * 1000;
     };
 
     return Controller;

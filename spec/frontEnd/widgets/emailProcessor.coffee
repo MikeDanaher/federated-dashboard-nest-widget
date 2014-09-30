@@ -75,11 +75,11 @@ describe 'Notificatin.Widgets.EmailProcessor', ->
 
     it 'does NOT get emails from the api if there are no new emails', ->
       processor = newProcessor(mockDisplay)
-      processor.currentNotifications = mockEmails()
+      processor.notificationsHistory = mockEmails()
       spy = spyOn(Notification.Widgets.API, 'getEmail')
       processor.processEmails(mockEmails())
 
-      expect(spy).not.toHaveBeenCalledWith('3', processor)
+      expect(spy).not.toHaveBeenCalled()
 
   describe 'processEmail', ->
     it 'adds the email to the currentNotifications', ->
