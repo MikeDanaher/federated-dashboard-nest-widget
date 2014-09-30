@@ -98,15 +98,17 @@
     function Controller(args) {
       this.container = args.container;
       this.refreshRate = args.refreshRate;
+      this.defaultValue = args.defaultValue;
+      this.isActive = false;
       this.display = new Notification.Widgets.Display(args);
       this.processor = new Notification.Widgets.EmailProcessor(this.display, args.maxNotifications);
-      this.isActive = false;
     }
 
     Controller.prototype.initialize = function() {
       this.display.setup();
       this.bind();
-      return this.activate();
+      this.activate();
+      return this.displayDefault();
     };
 
     Controller.prototype.bind = function() {
@@ -133,6 +135,12 @@
 
     Controller.prototype.deactivate = function() {
       return this.isActive = false;
+    };
+
+    Controller.prototype.displayDefault = function() {
+      if (this.defaultValue) {
+        return this.getNotifications(this.defaultValue);
+      }
     };
 
     Controller.prototype.getNotifications = function(input) {

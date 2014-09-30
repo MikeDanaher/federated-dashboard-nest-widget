@@ -7,8 +7,8 @@ describe 'Notificatoin.Widgets.Controller', ->
 
   controller = undefined
 
-  newController = (container) ->
-    new Notification.Widgets.Controller({ container: container })
+  newController = (container, defaultValue) ->
+    new Notification.Widgets.Controller({ container: container, defaultValue: defaultValue })
 
   setupController = ->
     setFixtures sandbox()
@@ -39,10 +39,19 @@ describe 'Notificatoin.Widgets.Controller', ->
 
     it 'sets the widget as active', ->
       controller = newController('#sandbox')
+
+      expect(controller.isActive).toBe(false)
       controller.initialize()
 
       expect(controller.isActive).toBe(true)
 
+    it 'displays the default value when it is set', ->
+      controller = newController('#sandbox', email)
+
+      spy = spyOn(controller.processor, 'getNotifications')
+      controller.initialize()
+
+      expect(spy).toHaveBeenCalledWith(email)
 
   describe '#closeWidget', ->
     it 'is deactivating the widget', ->
@@ -61,7 +70,6 @@ describe 'Notificatoin.Widgets.Controller', ->
       controller.closeWidget()
 
       expect(controller.unbind).toHaveBeenCalled()
-
 
   describe '#refreshRate', ->
     controller = undefined

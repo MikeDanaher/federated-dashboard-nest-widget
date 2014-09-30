@@ -1,6 +1,6 @@
 {
   "name": "federated-dashboard-notification-widget",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "ignore": [
     ".tmp",
     "spec",
