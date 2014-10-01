@@ -29,11 +29,17 @@ class Notification.Widgets.EmailProcessor
 
   processEmail: (email) ->
     @addToHistory(email)
-    if email.body && @hasValidSubject(email)
+    if @hasValidSubject(email)
       @displayEmail(email)
 
   hasValidSubject: (email) ->
-    email.subject && (email.subject == '[notification]' || email.subject == '[alert]')
+    email.subject && @containsNotificationType(email.subject)
+
+  containsNotificationType: (subject) ->
+    @contains(subject, '[alert] ') || @contains(subject, '[notification] ')
+
+  contains: (checkStr, substr) ->
+    checkStr.indexOf(substr) != -1
 
   displayEmail: (email) ->
     @addToCurrentNotifications(email)

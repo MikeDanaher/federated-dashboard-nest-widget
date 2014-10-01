@@ -2,29 +2,25 @@ describe 'Notificatin.Widgets.EmailProcessor', ->
   email1 = {
     id: '1',
     from: 'test@test.com',
-    subject: '[alert]',
-    body: 'test body1'
+    subject: '[alert] message1',
   }
 
   email2 = {
     id: '2',
     from: 'test@test.com',
-    subject: '[notification]',
-    body: 'test body2'
+    subject: '[notification] message2',
   }
 
   email3 = {
     id: '3',
     from: 'test@test.com',
-    subject: '[alert]',
-    body: 'test body3'
+    subject: '[alert] message3',
   }
 
   email4 = {
     id: '4',
-    from: 'test@test.com',
+    from: 'test@test.com message4',
     subject: '[alert]',
-    body: ''
   }
 
   mockEmails       = -> [email1, email2]
@@ -97,12 +93,14 @@ describe 'Notificatin.Widgets.EmailProcessor', ->
       processor = newProcessor(display, 2)
       setFixtures(sandbox())
       display.setup()
-      processor.currentNotifications = [email2, email1]
+      email1Presenter = new Notification.Widgets.EmailPresenter(email1)
+      email2Presenter = new Notification.Widgets.EmailPresenter(email2)
+      processor.currentNotifications = [email2Presenter, email1Presenter]
       processor.processEmail(email3)
 
-      expect('body').toContainText(email3.body)
-      expect('body').toContainText(email2.body)
-      expect('body').not.toContainText(email1.body)
+      expect('body').toContainText('message3')
+      expect('body').toContainText('message2')
+      expect('body').not.toContainText('message1')
 
     it 'adds all emails to notificationsHistory', ->
       display = setupNewDisplay()
@@ -113,15 +111,6 @@ describe 'Notificatin.Widgets.EmailProcessor', ->
 
       processor.processEmail(email4)
       expect(processor.notificationsHistory).toEqual([email4, email1])
-
-    it 'it does not add emails that have no body data', ->
-      display = setupNewDisplay()
-      processor = newProcessor(display, 2)
-      processor.processEmail(email1)
-      processor.processEmail(email4)
-
-      expect(processor.currentNotifications.length).toEqual(1)
-      expect(processor.currentNotifications[0].id).toEqual('1')
 
     it 'does not add emails that have no subject', ->
       email4.body = 'valid body'

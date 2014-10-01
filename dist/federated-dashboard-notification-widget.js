@@ -36,7 +36,6 @@
     };
 
     Controller.enterEditMode = function() {
-      console.log(this.animationSpeed());
       $('[data-id=notification-widget-wrapper] [data-id=notification-form]').show(this.animationSpeed());
       return $('[data-id=notification-widget-wrapper] .widget-close').show(this.animationSpeed());
     };
@@ -58,7 +57,7 @@
     function Display() {}
 
     Display.generateLogo = function(config) {
-      return "<i class=\"fa fa-thumbs-o-up " + config["class"] + "\" data-id=\"" + config.dataId + "\"></i>";
+      return "<i class=\"fa fa-bell " + config["class"] + "\" data-id=\"" + config.dataId + "\"></i>";
     };
 
     return Display;
@@ -220,17 +219,47 @@
     function EmailPresenter(email) {
       this.id = email.id;
       this.from = email.from;
-      this.body = email.body;
       this.subject = email.subject;
       this.symbol = this.generateSymbol(email.subject);
+      this.body = this.generateBody(email.subject);
     }
 
     EmailPresenter.prototype.generateSymbol = function(subject) {
-      if (subject === '[alert]') {
+      if (this.contains(subject, '[alert]')) {
         return '<i class="red fa fa-exclamation-circle"></i>';
       } else {
         return '<i class="fa fa-bell"></i>';
       }
+    };
+
+    EmailPresenter.prototype.contains = function(checkStr, substr) {
+      return checkStr.indexOf(substr) !== -1;
+    };
+
+    EmailPresenter.prototype.generateBody = function(subject) {
+      var rawBody;
+      rawBody = subject.split('] ')[1];
+      return this.sanitizeBody(rawBody);
+    };
+
+    EmailPresenter.prototype.sanitizeBody = function(body) {
+      _.each(this.charactersToEscape, (function(_this) {
+        return function(escapedVersion, char) {
+          var _results;
+          _results = [];
+          while (body.indexOf(char) !== -1) {
+            _results.push(body = body.replace(char, escapedVersion));
+          }
+          return _results;
+        };
+      })(this));
+      return body;
+    };
+
+    EmailPresenter.prototype.charactersToEscape = {
+      '<': '&lt;',
+      '>': '&gt;',
+      '\"': '&quot;'
     };
 
     return EmailPresenter;
@@ -281,13 +310,21 @@
 
     EmailProcessor.prototype.processEmail = function(email) {
       this.addToHistory(email);
-      if (email.body && this.hasValidSubject(email)) {
+      if (this.hasValidSubject(email)) {
         return this.displayEmail(email);
       }
     };
 
     EmailProcessor.prototype.hasValidSubject = function(email) {
-      return email.subject && (email.subject === '[notification]' || email.subject === '[alert]');
+      return email.subject && this.containsNotificationType(email.subject);
+    };
+
+    EmailProcessor.prototype.containsNotificationType = function(subject) {
+      return this.contains(subject, '[alert] ') || this.contains(subject, '[notification] ');
+    };
+
+    EmailProcessor.prototype.contains = function(checkStr, substr) {
+      return checkStr.indexOf(substr) !== -1;
     };
 
     EmailProcessor.prototype.displayEmail = function(email) {

@@ -11,7 +11,6 @@ class Notification.Controller
     $('[data-id=notification-widget-wrapper] .widget-close').hide(@animationSpeed())
 
   @enterEditMode: ->
-    console.log @animationSpeed()
     $('[data-id=notification-widget-wrapper] [data-id=notification-form]').show(@animationSpeed())
     $('[data-id=notification-widget-wrapper] .widget-close').show(@animationSpeed())
 
