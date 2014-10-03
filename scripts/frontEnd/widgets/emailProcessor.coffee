@@ -3,7 +3,7 @@ namespace('Notification.Widgets')
 class Notification.Widgets.EmailProcessor
   constructor: (display, maxNotifications) ->
     @display = display
-    @maxNotifications = maxNotifications
+    @maxNotifications = maxNotifications || 5
     @currentNotifications = []
     @notificationsHistory = []
 
@@ -11,17 +11,16 @@ class Notification.Widgets.EmailProcessor
     Notification.Widgets.API.getEmailsFrom(@, from)
 
   processEmails: (emails) ->
-    _.each(emails.reverse(), (email) =>
+    _.each emails.reverse(), (email) =>
       if @isNewEmail(email)
         @getNewEmail(email)
-    )
 
   isNewEmail: (email) ->
     isNewEmail = true
-    _.each(@notificationsHistory, (existingEmail) ->
+    _.each @notificationsHistory, (existingEmail) ->
       if existingEmail.id == email.id
         isNewEmail = false
-    )
+
     isNewEmail
 
   getNewEmail: (email) ->

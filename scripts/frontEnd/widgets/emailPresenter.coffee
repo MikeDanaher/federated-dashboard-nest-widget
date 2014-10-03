@@ -22,13 +22,14 @@ class Notification.Widgets.EmailPresenter
     @sanitizeBody(rawBody)
 
   sanitizeBody: (body) ->
-    _.each(@charactersToEscape, (escapedVersion, char) =>
+    _.each @charactersToEscape, (escapedVersion, char) =>
       body = body.replace(char, escapedVersion) while body.indexOf(char) != -1
-    )
+
     body
 
-  charactersToEscape: {
-    '<' : '&lt;'
-    '>' : '&gt;'
-    '\"': '&quot;'
-  }
+  charactersToEscape:
+    {
+      '<' : '&lt;'
+      '>' : '&gt;'
+      '\"': '&quot;'
+    }

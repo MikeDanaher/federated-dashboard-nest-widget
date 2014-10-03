@@ -5,10 +5,9 @@ class Notification.Widgets.Controller
     @container    = args.container
     @refreshRate  = args.refreshRate
     @defaultValue = args.defaultValue
-    @isActive     = false
-
     @display      = new Notification.Widgets.Display(args)
     @processor    = new Notification.Widgets.EmailProcessor(@display, args.maxNotifications)
+    @isActive     = false
 
   initialize: ->
     @display.setup()

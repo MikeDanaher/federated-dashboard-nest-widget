@@ -4,7 +4,7 @@ class Notification.Widgets.Templates
   @renderForm: () ->
     _.template("""
                   <div class="widget" data-id="notification-widget-wrapper">
-                    <div class="widget-header">
+                    <div class="widget-header" data-name="sortable-handle">
                       <h2 class="widget-title">Notifications</h2>
                       <span class='widget-close' data-id='notification-close'>×</span>
                       <div class="widget-form" data-id="notification-form">
