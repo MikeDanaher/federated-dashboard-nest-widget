@@ -16,12 +16,14 @@ class Notification.Widgets.Controller
     @displayDefault()
 
   bind: ->
-    $("#{@container} [data-id=notification-button]").on('click', => @getNotifications(@display.getInput()))
-    $("#{@container} [data-id=notification-close]").on('click', => @closeWidget())
+    $("#{@container} [data-name=widget-form]").on('submit',(e) =>
+      e.preventDefault()
+      @getNotifications(@display.getInput()))
+    $("#{@container} [data-name=widget-close]").on('click', => @closeWidget())
 
   unbind: ->
-    $("#{@container} [data-id=notification-button]").unbind('click')
-    $("#{@container} [data-id=notification-close]").unbind('click')
+    $("#{@container} [data-name=widget-form]").unbind('submit')
+    $("#{@container} [data-name=widget-close]").unbind('click')
 
   activate: ->
     @isActive = true

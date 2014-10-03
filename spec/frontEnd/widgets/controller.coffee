@@ -20,11 +20,11 @@ describe 'Notificatoin.Widgets.Controller', ->
       setupController()
       expect($('.widget-form')).toContainElement('button')
 
-    it 'binds the notification button to the get notifications method', ->
+    it 'binds the form submission to the get notifications method', ->
       setupController()
       spy = spyOn(Notification.Widgets.API, 'getEmailsFrom')
-      $('[name=notification-search]').val(email)
-      $('[data-id=notification-button]').click()
+      $('[name=widget-input]').val(email)
+      $('[data-name=widget-form]').submit()
 
       expect(spy).toHaveBeenCalledWith(controller.processor, email)
 
@@ -33,7 +33,7 @@ describe 'Notificatoin.Widgets.Controller', ->
       setupController()
 
       expect($('#sandbox')).toBeInDOM()
-      $('[data-id=notification-close]').click()
+      $('[data-name=widget-close]').click()
 
       expect($('#sandbox')).not.toBeInDOM()
 
@@ -128,18 +128,14 @@ describe 'Notificatoin.Widgets.Controller', ->
   describe '#unbind', ->
     it 'unbinds the notification button', ->
       setupController()
-
-      spy = spyOn(controller.processor, 'getNotifications')
-      $('[data-id=notification-button]').click()
-      expect(spy.calls.count()).toBe(1)
+      spy = spyOn($.prototype, 'unbind')
 
       controller.unbind()
-      $('[data-id=notification-button]').click()
-      expect(spy.calls.count()).toBe(1)
+      expect(spy).toHaveBeenCalledWith('submit')
 
     it 'unbinds the close-widget button', ->
       setupController()
       controller.unbind()
 
-      $('[data-id=notification-close]').click()
+      $('[data-name=widget-close]').click()
       expect('#sandbox').toBeInDOM()

@@ -9,8 +9,8 @@ class Notification.Widgets.Display
     $(@container).html(templateHtml)
 
   getInput: ->
-    $("#{@container} [name=notification-search]").val()
+    $("#{@container} [name=widget-input]").val()
 
   renderEmails: (emails) ->
     emailsHtml = Notification.Widgets.Templates.renderEmails(emails)
-    $("#{@container} [data-id=notification-output]").html(emailsHtml)
+    $("#{@container} [data-name=widget-output]").html(emailsHtml)

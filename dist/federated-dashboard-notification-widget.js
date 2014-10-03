@@ -94,12 +94,13 @@
     };
 
     Controller.prototype.bind = function() {
-      $("" + this.container + " [data-id=notification-button]").on('click', (function(_this) {
-        return function() {
+      $("" + this.container + " [data-name=widget-form]").on('submit', (function(_this) {
+        return function(e) {
+          e.preventDefault();
           return _this.getNotifications(_this.display.getInput());
         };
       })(this));
-      return $("" + this.container + " [data-id=notification-close]").on('click', (function(_this) {
+      return $("" + this.container + " [data-name=widget-close]").on('click', (function(_this) {
         return function() {
           return _this.closeWidget();
         };
@@ -107,8 +108,8 @@
     };
 
     Controller.prototype.unbind = function() {
-      $("" + this.container + " [data-id=notification-button]").unbind('click');
-      return $("" + this.container + " [data-id=notification-close]").unbind('click');
+      $("" + this.container + " [data-name=widget-form]").unbind('submit');
+      return $("" + this.container + " [data-name=widget-close]").unbind('click');
     };
 
     Controller.prototype.activate = function() {
@@ -180,13 +181,13 @@
     };
 
     Display.prototype.getInput = function() {
-      return $("" + this.container + " [name=notification-search]").val();
+      return $("" + this.container + " [name=widget-input]").val();
     };
 
     Display.prototype.renderEmails = function(emails) {
       var emailsHtml;
       emailsHtml = Notification.Widgets.Templates.renderEmails(emails);
-      return $("" + this.container + " [data-id=notification-output]").html(emailsHtml);
+      return $("" + this.container + " [data-name=widget-output]").html(emailsHtml);
     };
 
     return Display;
@@ -348,7 +349,7 @@
     function Templates() {}
 
     Templates.renderForm = function() {
-      return _.template("<div class=\"widget\" data-id=\"notification-widget-wrapper\">\n  <div class=\"widget-header\" data-name=\"sortable-handle\">\n    <h2 class=\"widget-title\">Notifications</h2>\n    <span class='widget-close' data-id='notification-close'>×</span>\n    <div class=\"widget-form\" data-id=\"notification-form\">\n      <input name=\"notification-search\" type=\"text\" autofocus=\"true\">\n      <button data-id=\"notification-button\">Load Notifications</button><br>\n    </div>\n  </div>\n  <div class=\"widget-body\" data-id=\"notification-output\"></div>\n</div>", {});
+      return _.template("<div class='widget' data-name='widget-wrapper'>\n  <div class='widget-header' data-name='sortable-handle'>\n    <h2 class=\"widget-title\">Notifications</h2>\n    <span class='widget-close' data-name='widget-close'>×</span>\n    <form class='widget-form' data-name='widget-form'>\n      <input name='widget-input' type='text' autofocus='true'>\n      <button data-name=\"form-button\">Load Notifications</button><br>\n    </form>\n  </div>\n  <div class=\"widget-body\" data-name=\"widget-output\"></div>\n</div>", {});
     };
 
     Templates.renderEmails = function(emails) {
