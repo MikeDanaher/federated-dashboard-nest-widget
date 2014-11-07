@@ -1,1 +1,1 @@
-#federated-dashboard-notification-widget
+#federated-dashboard-nest-widget

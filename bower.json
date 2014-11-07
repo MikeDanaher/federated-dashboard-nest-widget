@@ -1,6 +1,6 @@
 {
-  "name": "federated-dashboard-notification-widget",
-  "version": "0.0.6",
+  "name": "federated-dashboard-nest-widget",
+  "version": "0.0.1",
   "ignore": [
     ".tmp",
     "spec",

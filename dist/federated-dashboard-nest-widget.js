@@ -34,13 +34,13 @@
 }).call(this);
 
 (function() {
-  namespace('Notification');
+  namespace('Nest');
 
-  Notification.Display = (function() {
+  Nest.Display = (function() {
     function Display() {}
 
     Display.generateLogo = function(config) {
-      return "<i class=\"fa fa-bell " + config["class"] + "\" data-id=\"" + config.dataId + "\"></i>";
+      return "<i class=\"fa fa-home " + config["class"] + "\" data-id=\"" + config.dataId + "\"></i>";
     };
 
     return Display;

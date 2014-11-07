@@ -1,13 +1,12 @@
 {
-  "name": "federated-dashboard-notification-widget",
-  "version": "0.0.6",
+  "name": "federated-dashboard-nest-widget",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "dependencies": {
     "bower": "~1.3.1",
     "express": "4.x",
     "socket.io": "~1.0.6",
-    "googleapis": "~1.0.11",
     "base64": "~2.1.0"
   },
   "devDependencies": {
@@ -33,6 +32,6 @@
     "type": "git",
     "url": "TBA"
   },
-  "author": "Alex Codreanu <alexcodreanu86@gmail.com> (http://alexcodreanu.com/)",
+  "author": "Mike Danaher <mdanaher@8thlight.com> (http://www.mikedanaher.me/)",
   "license": "ISC"
 }

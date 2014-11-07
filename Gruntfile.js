@@ -17,8 +17,16 @@ module.exports = function (grunt) {
         expand: true,
         flatten: false,
         cwd: 'spec',
-        src: 'frontEnd/**/*.coffee',
+        src: '**/*.coffee',
         dest: '.tmp/spec/',
+        ext: '.js'
+      },
+      compileServer: {
+        expand: true,
+        flatten: false,
+        cwd: 'server',
+        src: '**/*.coffee',
+        dest: './',
         ext: '.js'
       }
     },
@@ -27,21 +35,14 @@ module.exports = function (grunt) {
         seperator: ';'
       },
       dist: {
-        src: ['lib/namespace.js', '.tmp/scripts/frontEnd/**/*.js'],
+        src: ['lib/namespace.js', '.tmp/scripts/**/*.js'],
         dest: 'dist/<%= pkg.name %>.js'
       },
-      server: {
-        src: ['.tmp/scripts/server.js'],
-        dest: 'server.js'
-      }
     },
     uglify: {
       dist: {
         files: {
           'dist/<%= pkg.name %>.min.js': ['<%= concat.dist.dest %>'],
-          'dist/backEnd/googleOauthWrapper.js': '.tmp/scripts/backEnd/googleOauthWrapper.js',
-          'dist/backEnd/googleEmailWrapper.js': '.tmp/scripts/backEnd/googleEmailWrapper.js',
-          'dist/backEnd/router.js': '.tmp/scripts/backEnd/router.js'
         }
       }
     }
